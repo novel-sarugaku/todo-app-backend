@@ -1,0 +1,33 @@
+version: "3.0"
+
+services:
+  api:
+    container_name: "api"
+    volumes:
+      - ./src/todo_app:/todo_app
+    build:
+      context: .
+      dockerfile: docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+
+  db:
+    container_name: "db"
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    ports:
+      - 3306:3306

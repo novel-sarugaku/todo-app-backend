@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# 環境変数ファイル
+.env
+
+# ローカル履歴 / 自動生成物
+.history/

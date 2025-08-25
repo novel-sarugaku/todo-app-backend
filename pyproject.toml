@@ -1,0 +1,59 @@
+[project]
+name = "todo-app"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[all] (>=0.115.12,<0.116.0)",
+    "alembic (>=1.15.2,<2.0.0)",
+    "sqlalchemy (>=2.0.40,<3.0.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "mysqlclient (>=2.2.7,<3.0.0)",
+]
+
+[tool.poetry]
+packages = [{include = "todo_app", from = "src"}]
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+ruff = "^0.11.5"
+freezegun = "^1.5.1"
+
+[tool.ruff]
+extend-select = [
+  "E",    # pycodestyle（PEP8）
+  "F",    # pyflakes（未使用の変数など）
+  "I",    # isort（インポート順）
+  "B",    # flake8-bugbear（バグにつながるコード）
+  "UP",   # pyupgrade（新しい構文の推奨）
+  "C4",   # flake8-comprehensions（内包表記の改善）
+  "ANN",  # flake8-annotations（型アノテーションの有無）
+  "SIM",  # flake8-simplify（冗長な構文の簡略化）
+  "FAST003",  # fast-api-unused-path-parameter（FastAPIにおいてpath parameterのシグネチャ宣言を強制）
+]
+
+ignore = [
+  "E501",    # 行が長すぎる
+]
+
+line-length = 100  # 行の最大長
+target-version = "py312"  # 対象Pythonバージョン
+show-fixes = true         # VSCode上でfixできる項目を表示
+
+[tool.ruff.isort]
+known-first-party = ["demo"] # 自作モジュールの名前
+combine-as-imports = true
+force-single-line = false
+lines-between-types = 1
+
+[tool.ruff.flake8-type-checking]
+strict = true  # 型チェック目的のインポートはすべて遅延させるように警告
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
