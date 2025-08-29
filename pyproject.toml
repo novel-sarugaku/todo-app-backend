@@ -23,6 +23,9 @@ packages = [{include = "todo_app", from = "src"}]
 pytest = "^8.3.5"
 ruff = "^0.11.5"
 freezegun = "^1.5.1"
+pytest-asyncio = "^1.1.0"
+httpx = "^0.28.1"
+pytest-cov = "^6.2.1"
 
 [tool.ruff]
 extend-select = [
