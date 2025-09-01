@@ -1,0 +1,44 @@
+name: Code checking with Ruff and Pytest # ワークフローの表示名
+
+on:
+  pull_request: # PRが作られた時に動かす
+    paths:
+      - "**" # リポジトリ内のどこを変更してもワークフローが走る
+  push: # pushされた時にも動かす
+    paths:
+      - "**" # リポジトリ内のどこを変更してもワークフローが走る
+
+jobs:
+  code-style-check: # code-style-check→ジョブID。ジョブID = GitHub Actions内でそのジョブを区別するためのラベル
+    runs-on: ubuntu-latest # GitHub Actionsのジョブは「どんなOSのマシンで動かすか」を選べる。Linux（その中でもUbuntuという種類）の最新版を使う。
+
+    steps: # 手順を上から順に実行（uses:「既製のアクションを使う」、run:「シェルコマンドを実行する」）
+      - name: Checkout code
+        uses: actions/checkout@v4 # GitHub上のリポジトリの中身を仮想マシンにコピーして、テストなどを実行できるようにする
+
+      # GitHub Actionsの実行マシンにPythonを用意して、Ruffを入れる
+      - name: Set up Python
+        uses: actions/setup-python@v5 # Pythonを入れる
+        with:
+          python-version: "3.13.1" # どのバージョンのPythonを使うかを指定
+
+      - name: Install Ruff
+        run: pip install --upgrade ruff # さっき用意したPython環境に、Ruffをインストール
+
+      # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
+      - name: Run Ruff
+        run: |
+          ruff --version
+          ruff check src/todo_app tests
+
+      # Docker Composeで起動（apiとdb）
+      - name: Build and run containers
+        run: docker compose up -d --build
+
+      # Alembic migrate実行（先にalembic upgrade headを実行して、必要なテーブル・カラムを作っておく必要があるため）
+      - name: Alembic migrate
+        run: docker exec api alembic upgrade head
+
+      # コンテナ内でpytest実行
+      - name: Execute pytest within the application container
+        run: docker exec api pytest tests
