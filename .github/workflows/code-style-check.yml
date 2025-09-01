@@ -37,8 +37,8 @@ jobs:
 
       # Alembic migrate実行（先にalembic upgrade headを実行して、必要なテーブル・カラムを作っておく必要があるため）
       - name: Alembic migrate
-        run: docker exec api alembic upgrade head # apiコンテナ内で作業ディレクトリを/todo_appにしてAlembicを実行し、最新のDBマイグレーション（upgrade head）を適用する
+        run: docker exec -w /todo_app api alembic upgrade head # apiコンテナ内で作業ディレクトリを/todo_appにしてAlembicを実行し、最新のDBマイグレーション（upgrade head）を適用
 
       # コンテナ内でpytest実行
       - name: Execute pytest within the application container
-        run: docker exec -w /todo_app api pytest tests
+        run: docker exec api pytest tests
