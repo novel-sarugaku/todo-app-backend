@@ -25,7 +25,7 @@ ruff = "^0.11.5"
 freezegun = "^1.5.1"
 
 [tool.ruff]
-extend-select = [
+lint.extend-select = [
   "E",    # pycodestyle（PEP8）
   "F",    # pyflakes（未使用の変数など）
   "I",    # isort（インポート順）
@@ -37,21 +37,21 @@ extend-select = [
   "FAST003",  # fast-api-unused-path-parameter（FastAPIにおいてpath parameterのシグネチャ宣言を強制）
 ]
 
-ignore = [
+lint.ignore = [
   "E501",    # 行が長すぎる
 ]
 
 line-length = 100  # 行の最大長
-target-version = "py312"  # 対象Pythonバージョン
+target-version = "py313"  # 対象Pythonバージョン
 show-fixes = true         # VSCode上でfixできる項目を表示
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["demo"] # 自作モジュールの名前
 combine-as-imports = true
 force-single-line = false
 lines-between-types = 1
 
-[tool.ruff.flake8-type-checking]
+[tool.ruff.lint.flake8-type-checking]
 strict = true  # 型チェック目的のインポートはすべて遅延させるように警告
 
 [build-system]
