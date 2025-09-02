@@ -1,25 +1,33 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
+Kind = Literal["expense", "income"]
 
-# GETリクエストで返す形式を定義
+
+# GETレスポンスを定義
 class GetMoneyFlowResponseItem(BaseModel):
     id: int
     title: str
     amount: int
     occurred_date: datetime
+    kind: Kind
 
-# POSTリクエストで返す形式を定義
+
+# POSTレスポンスを定義
 class CreateMoneyFlowResponse(BaseModel):
     id: int
     title: str
     amount: int
     occurred_date: datetime
+    kind: Kind
 
-# PUTリクエストで返す形式を定義
+
+# PUTレスポンスを定義
 class UpdateMoneyFlowResponse(BaseModel):
     id: int
     title: str
     amount: int
     occurred_date: datetime
+    kind: Kind
