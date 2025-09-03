@@ -24,6 +24,7 @@ from todo_app.repositories.money_flows import (
 
 router = APIRouter()
 
+# ★TODO: APIテスト実施の際に、BusinessExceptionのみでなく、他の例外（SystemException、DatabaseExceptioなど）の自作エラーも追加する。
 
 @router.get("/{id}")
 def get_money_flow(
