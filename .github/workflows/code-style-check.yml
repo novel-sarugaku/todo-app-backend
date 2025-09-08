@@ -22,8 +22,17 @@ jobs:
         with:
           python-version: "3.13.1" # どのバージョンのPythonを使うかを指定
 
-      - name: Install Ruff
-        run: pip install --upgrade ruff # さっき用意したPython環境に、Ruffをインストール
+      # poetryのインストールを行う（pipを使わずpoetryを使う理由：）
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      # poetryのバージョンを確認
+      - name: Check Poetry Version
+        run: poetry -V
+
+      # poetryでtomlの中身のインストールを行う
+      - name: Install package
+        run: poetry install  # pyproject.tomlを参照して、用意したPython環境に必要なものをインストールする
 
       # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
       - name: Run Ruff
@@ -31,20 +40,20 @@ jobs:
           ruff --version
           ruff check src/todo_app tests
 
-      # 作成した.env.testを.envという名前で仮想マシンにコピー
-      - name: env
-        run: |
-          cp .env.test .env
-        working-directory: src/todo_app
+      # 以下の記述はDBに関係するテストを行う際に使用する。
+        # # 作成した.env.testを.envという名前で仮想マシンにコピー
+        # - name: env
+        #   run: cp .env.test .env
+        #   working-directory: src/todo_app
 
-      # Docker Composeで起動（apiとdb）
-      - name: Build and run containers
-        run: docker compose up -d --build
+        # # Docker Composeで起動（apiとdb）
+        # - name: Build and run containers
+        #   run: docker compose up -d --build
 
-      # Alembic migrate実行（先にalembic upgrade headを実行して、必要なテーブル・カラムを作っておく必要があるため）
-      - name: Alembic migrate
-        run: docker exec -w /todo_app api alembic upgrade head # apiコンテナ内で作業ディレクトリを/todo_appにしてAlembicを実行し、最新のDBマイグレーション（upgrade head）を適用
+        # # Alembic migrate実行（先にalembic upgrade headを実行して、必要なテーブル・カラムを作っておく必要があるため）
+        # - name: Alembic migrate
+        #   run: docker exec -w /todo_app api alembic upgrade head # apiコンテナ内で作業ディレクトリを/todo_appにしてAlembicを実行し、最新のDBマイグレーション（upgrade head）を適用
 
-      # コンテナ内でpytest実行
-      - name: Execute pytest within the application container
-        run: docker exec api pytest tests
+      # pytest実行
+      - name: Execute pytest
+        run: pytest tests
