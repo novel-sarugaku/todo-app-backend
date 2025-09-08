@@ -1,0 +1,53 @@
+name: Code checking with Ruff and Pytest # ワークフローの表示名
+
+on:
+  pull_request: # PRが作られた時に動かす
+    paths:
+      - "**" # リポジトリ内のどこを変更してもワークフローが走る
+  push: # pushされた時にも動かす
+    paths:
+      - "**" # リポジトリ内のどこを変更してもワークフローが走る
+
+jobs:
+  code-style-check: # code-style-check→ジョブID。ジョブID = GitHub Actions内でそのジョブを区別するためのラベル
+    runs-on: ubuntu-latest # GitHub Actionsのジョブは「どんなOSのマシンで動かすか」を選べる。Linux（その中でもUbuntuという種類）の最新版を使う。
+
+    steps: # 手順を上から順に実行（uses:「既製のアクションを使う」、run:「シェルコマンドを実行する」）
+      - name: Checkout code
+        uses: actions/checkout@v4 # GitHub上のリポジトリの中身を仮想マシンにコピーして、テストなどを実行できるようにする
+
+      # GitHub Actionsの実行マシンにPythonを用意して、Ruffを入れる
+      - name: Set up Python
+        uses: actions/setup-python@v5 # Pythonを入れる
+        with:
+          python-version: "3.13.1" # どのバージョンのPythonを使うかを指定
+
+      # poetryのインストールを行う（pipを使わずpoetryを使う理由：）virtualenvs-create：true→poetryの対象環境を仮想環境をではなくグローバルに環境に作る。
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.1.3
+          virtualenvs-create: false
+
+      # poetryのバージョンを確認
+      - name: Check Poetry Version
+        run: poetry -V
+
+      # poetryでtomlの中身のインストールを行う
+      - name: Install package
+        run: poetry install  # pyproject.tomlを参照して、用意したPython環境に必要なものをインストールする
+
+      # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
+      - name: Run Ruff
+        run: |
+          ruff --version
+          ruff check src/todo_app tests
+
+      # 作成した.env.testを.envという名前で仮想マシンにコピー
+      - name: env
+        run: cp .env.test .env
+        working-directory: src/todo_app
+
+      # pytest実行
+      - name: Execute pytest
+        run: pytest tests
