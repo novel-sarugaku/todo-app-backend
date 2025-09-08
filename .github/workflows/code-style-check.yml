@@ -31,6 +31,12 @@ jobs:
           ruff --version
           ruff check src/todo_app tests
 
+      # 作成した.env.testを.envという名前で仮想マシンにコピー
+      - name: env
+        run: |
+          cp .env.test .env
+        working-directory: src/todo_app
+
       # Docker Composeで起動（apiとdb）
       - name: Build and run containers
         run: docker compose up -d --build
