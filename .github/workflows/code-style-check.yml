@@ -22,9 +22,11 @@ jobs:
         with:
           python-version: "3.13.1" # どのバージョンのPythonを使うかを指定
 
-      # poetryのインストールを行う（pipを使わずpoetryを使う理由：）
+      # poetryのインストールを行う（pipを使わずpoetryを使う理由：）virtualenvs-create：true→poetryの対象環境を仮想環境をではなくグローバルに環境に作る。
       - name: Install Poetry
         uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: false
 
       # poetryのバージョンを確認
       - name: Check Poetry Version
@@ -36,7 +38,9 @@ jobs:
 
       # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
       - name: Run Ruff
-        run: poetry ruff check src/todo_app tests
+        run: |
+          ruff --version
+          ruff check src/todo_app tests
 
       # 以下の記述はDBに関係するテストを行う際に使用する。
         # # 作成した.env.testを.envという名前で仮想マシンにコピー
