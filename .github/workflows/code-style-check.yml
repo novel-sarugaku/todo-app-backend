@@ -37,8 +37,8 @@ jobs:
       # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
       - name: Run Ruff
         run: |
-          ruff --version
-          ruff check src/todo_app tests
+          poetry ruff --version
+          poetry ruff check src/todo_app tests
 
       # 以下の記述はDBに関係するテストを行う際に使用する。
         # # 作成した.env.testを.envという名前で仮想マシンにコピー
