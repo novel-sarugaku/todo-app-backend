@@ -48,15 +48,6 @@ jobs:
         run: cp .env.test .env
         working-directory: src/todo_app
 
-      # 以下の記述はDBに関係するテストを行う際に使用する。
-        # # Docker Composeで起動（apiとdb）
-        # - name: Build and run containers
-        #   run: docker compose up -d --build
-
-        # # Alembic migrate実行（先にalembic upgrade headを実行して、必要なテーブル・カラムを作っておく必要があるため）
-        # - name: Alembic migrate
-        #   run: docker exec -w /todo_app api alembic upgrade head # apiコンテナ内で作業ディレクトリを/todo_appにしてAlembicを実行し、最新のDBマイグレーション（upgrade head）を適用
-
       # pytest実行
       - name: Execute pytest
         run: pytest tests
