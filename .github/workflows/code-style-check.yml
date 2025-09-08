@@ -37,7 +37,7 @@ jobs:
       # Ruffのバージョン確認・アプリ本体src/todo_appとテストtestsに対してRuffを実行
       - name: Run Ruff
         run: |
-          poetry ruff --version
+          Ruff -V
           poetry ruff check src/todo_app tests
 
       # 以下の記述はDBに関係するテストを行う際に使用する。
