@@ -46,7 +46,7 @@ target-version = "py313"  # 対象Pythonバージョン
 show-fixes = true         # VSCode上でfixできる項目を表示
 
 [tool.ruff.lint.isort]
-known-first-party = ["demo"] # 自作モジュールの名前
+known-first-party = ["todo_app"] # 自作モジュールの名前
 combine-as-imports = true
 force-single-line = false
 lines-between-types = 1
