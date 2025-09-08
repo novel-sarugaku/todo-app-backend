@@ -45,6 +45,10 @@ line-length = 100  # 行の最大長
 target-version = "py313"  # 対象Pythonバージョン
 show-fixes = true         # VSCode上でfixできる項目を表示
 
+exclude = [
+  "src/todo_app/migrations",
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["demo"] # 自作モジュールの名前
 combine-as-imports = true
