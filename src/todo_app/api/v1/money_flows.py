@@ -1,6 +1,6 @@
-from typing import Annotated, Literal
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from todo_app.exceptions.business_error_exception import BusinessException
@@ -19,45 +19,16 @@ from todo_app.models.response.v1.money_flows import (
 from todo_app.repositories.money_flows import (
     get_money_flow_by_id,
     get_money_flows_all,
-    get_money_flows_by_kind,
 )
 
 router = APIRouter()
 
 # ★TODO: APIテスト実施の際に、BusinessExceptionのみでなく、他の例外（SystemException、DatabaseExceptioなど）の自作エラーも追加する。
 
-@router.get("/{id}")
-def get_money_flow(
-    id: int, session: Annotated[Session, Depends(get_db)]
-) -> GetMoneyFlowResponseItem:
-    # データ１件取得する
-    money_flow_item = get_money_flow_by_id(session, id=id)
-
-    if money_flow_item is None:
-        raise BusinessException("指定したIDが存在しません。")
-
-    return GetMoneyFlowResponseItem(
-        id=money_flow_item.id,
-        title=money_flow_item.title,
-        amount=money_flow_item.amount,
-        occurred_date=money_flow_item.occurred_date,
-        kind=money_flow_item.kind.value,
-    )
-
 
 @router.get("")
-def get_money_flows(
-    session: Annotated[Session, Depends(get_db)],
-    kind: Literal["expense", "income"] | None = Query(
-        default=None
-    ),  # クエリパラメータで種別を受け取る。絞り込みは任意のため、指定がなければNone
-) -> list[GetMoneyFlowResponseItem]:
-    # kindがあるときは種別で絞る、ないときは全件取得
-    money_flow_items = (
-        get_money_flows_by_kind(session, MoneyFlowKind(kind))
-        if kind
-        else get_money_flows_all(session)
-    )
+def get_money_flows(session: Annotated[Session, Depends(get_db)]) -> list[GetMoneyFlowResponseItem]:
+    money_flow_items = get_money_flows_all(session)
 
     return [
         GetMoneyFlowResponseItem(
