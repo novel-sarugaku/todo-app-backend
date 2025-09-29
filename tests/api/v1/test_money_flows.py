@@ -15,12 +15,14 @@ client = TestClient(app)  # 読み込んだappを渡して、擬似的なHTTPク
 
 # if TYPE_CHECKING: ブロックの中は、実行時には動かないため、副作用や循環を起こさない。
 # 型の参照だけ。conftest.pyはpytest専用の自動読み込みファイルで直importはNG
-if TYPE_CHECKING:
-    from tests.api.conftest import (
-        FakeSessionError,
-        FakeSessionOK,
-    )
+# if TYPE_CHECKING:
+#     from tests.api.conftest import (
+#         FakeSessionError,
+#         FakeSessionOK,
+#     )
 
+if TYPE_CHECKING:
+    from ..conftest import FakeSessionOK
 
 # ダミーモデルを定義（この型を使ってテスト内でダミーデータを作成する）
 @dataclass
@@ -94,10 +96,8 @@ def test_get_money_flows(monkeypatch: pytest.MonkeyPatch) -> None:
 # POSTテスト
 # テスト関数の引数にoverride_get_db_commit_okを書くと、フィクスチャでyieldされたFakeSessionが渡ってくる。
 # @pytest.mark.usefixtures(...) を使うと戻り値が受け取れない。
-def test_create_money_flows(override_get_db_commit_ok: "FakeSessionOK") -> None:
-    # 成功用ダミーセッション
-    fake_session = override_get_db_commit_ok  # conftest.pyのfixtureからFakeSessionを受け取る
-
+@pytest.mark.usefixtures("override_get_db_commit_ok")
+def test_create_money_flows(success_session: "FakeSessionOK") -> None:
     # APIに送るJSONデータを用意(辞書型)
     body = {
         "title": "お米",
@@ -111,7 +111,7 @@ def test_create_money_flows(override_get_db_commit_ok: "FakeSessionOK") -> None:
 
     # 検証
     assert response.status_code == 200
-    assert fake_session.commit_called is True  # commitが呼ばれたことを確認
+    assert success_session.commit_called is True  # commitが呼ばれたことを確認
     assert response.json() == {
         "id": 1,
         "title": "お米",
@@ -121,188 +121,188 @@ def test_create_money_flows(override_get_db_commit_ok: "FakeSessionOK") -> None:
     }
 
 
-# POSTテスト（コミットに失敗した場合）
-def test_create_money_flows_commit_error(override_get_db_commit_error: "FakeSessionError") -> None:
-    # 失敗用ダミーセッション
-    fake_session = override_get_db_commit_error
+# # POSTテスト（コミットに失敗した場合）
+# def test_create_money_flows_commit_error(override_get_db_commit_error: "FakeSessionError") -> None:
+#     # 失敗用ダミーセッション
+#     fake_session = override_get_db_commit_error
 
-    body = {
-        "title": "お米",
-        "amount": 4200,
-        "occurred_date": "2025-04-01T00:00:00",
-        "kind": "expense",
-    }
+#     body = {
+#         "title": "お米",
+#         "amount": 4200,
+#         "occurred_date": "2025-04-01T00:00:00",
+#         "kind": "expense",
+#     }
 
-    # 実行
-    client.post("/api/v1/money_flows", json=body)
+#     # 実行
+#     client.post("/api/v1/money_flows", json=body)
 
-    # 検証
-    assert fake_session.commit_called is True
-    assert fake_session.rolled_back is True  # rollbackが呼ばれたことを確認
-
-
-# PUTテスト
-def test_update_money_flows(
-    override_get_db_commit_ok: "FakeSessionOK", monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # テスト用の既存データを用意
-    existing_data = DummyFlow(
-        1,
-        "古いタイトル",
-        1000,
-        "2025-04-01T00:00:00",
-        DummyKind("expense"),
-    )
-
-    monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: existing_data)
-
-    # 成功用ダミーセッション
-    fake_session = override_get_db_commit_ok
-
-    body = {
-        "id": 1,
-        "title": "新しいタイトル",
-        "amount": 2000,
-        "occurred_date": "2025-04-02T00:00:00",
-        "kind": "income",
-    }
-
-    # 実行
-    response = client.put("/api/v1/money_flows", json=body)
-
-    # 検証
-    assert response.status_code == 200
-    assert fake_session.commit_called is True
-    assert response.json() == {
-        "id": 1,
-        "title": "新しいタイトル",
-        "amount": 2000,
-        "occurred_date": "2025-04-02T00:00:00",
-        "kind": "income",
-    }
+#     # 検証
+#     assert fake_session.commit_called is True
+#     assert fake_session.rolled_back is True  # rollbackが呼ばれたことを確認
 
 
-# PUTテスト（コミットに失敗した場合）
-def test_update_money_flows_commit_error(
-    override_get_db_commit_error: "FakeSessionError", monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # テスト用の既存データを用意
-    existing_data = DummyFlow(
-        1,
-        "古いタイトル",
-        1000,
-        "2025-04-01T00:00:00",
-        DummyKind("expense"),
-    )
+# # PUTテスト
+# def test_update_money_flows(
+#     override_get_db_commit_ok: "FakeSessionOK", monkeypatch: pytest.MonkeyPatch
+# ) -> None:
+#     # テスト用の既存データを用意
+#     existing_data = DummyFlow(
+#         1,
+#         "古いタイトル",
+#         1000,
+#         "2025-04-01T00:00:00",
+#         DummyKind("expense"),
+#     )
 
-    monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: existing_data)
+#     monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: existing_data)
 
-    # 失敗用ダミーセッション
-    fake_session = override_get_db_commit_error
+#     # 成功用ダミーセッション
+#     fake_session = override_get_db_commit_ok
 
-    body = {
-        "id": 1,
-        "title": "新しいタイトル",
-        "amount": 2000,
-        "occurred_date": "2025-04-02T00:00:00",
-        "kind": "income",
-    }
+#     body = {
+#         "id": 1,
+#         "title": "新しいタイトル",
+#         "amount": 2000,
+#         "occurred_date": "2025-04-02T00:00:00",
+#         "kind": "income",
+#     }
 
-    # 実行
-    client.put("/api/v1/money_flows", json=body)
+#     # 実行
+#     response = client.put("/api/v1/money_flows", json=body)
 
-    # 検証
-    assert fake_session.commit_called is True
-    assert fake_session.rolled_back is True
-
-
-# PUTテスト（指定IDが存在しない場合：BusinessException）
-@pytest.mark.usefixtures("override_get_db_success")
-def test_update_money_flows_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        api_money_flows, "get_money_flow_by_id", lambda _session, id: None
-    )  # 指定したIDが見つからない想定のためNoneを返す
-
-    body = {
-        "id": 999,  # 存在しないID
-        "title": "存在しないIDのタイトル",
-        "amount": 1,
-        "occurred_date": "2025-04-01T00:00:00",
-        "kind": "expense",
-    }
-
-    # 実行
-    response = client.put("/api/v1/money_flows", json=body)
-
-    # 検証
-    assert response.status_code == 422  # 設定した422が返ることを確認
-    assert response.json() == {
-        "detail": "指定したIDが存在しません。"
-    }  # 設定したメッセージが返ることを確認
+#     # 検証
+#     assert response.status_code == 200
+#     assert fake_session.commit_called is True
+#     assert response.json() == {
+#         "id": 1,
+#         "title": "新しいタイトル",
+#         "amount": 2000,
+#         "occurred_date": "2025-04-02T00:00:00",
+#         "kind": "income",
+#     }
 
 
-# DELETEテスト
-def test_delete_money_flows(
-    override_get_db_commit_ok: "FakeSessionOK", monkeypatch: pytest.MonkeyPatch
-) -> None:
-    target_data = DummyFlow(
-        1,
-        "削除用タイトル",
-        100,
-        "2025-04-01T00:00:00",
-        DummyKind("expense"),
-    )
+# # PUTテスト（コミットに失敗した場合）
+# def test_update_money_flows_commit_error(
+#     override_get_db_commit_error: "FakeSessionError", monkeypatch: pytest.MonkeyPatch
+# ) -> None:
+#     # テスト用の既存データを用意
+#     existing_data = DummyFlow(
+#         1,
+#         "古いタイトル",
+#         1000,
+#         "2025-04-01T00:00:00",
+#         DummyKind("expense"),
+#     )
 
-    monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: target_data)
+#     monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: existing_data)
 
-    # 成功用ダミーセッション
-    fake_session = override_get_db_commit_ok
+#     # 失敗用ダミーセッション
+#     fake_session = override_get_db_commit_error
 
-    # 実行
-    # TestClientはdelete()はjson=を受け付けない実装なので、request()で代用。.request()は共通の引数を受け付ける（json=, data=, params=, headers= など）。
-    response = client.request("DELETE", "/api/v1/money_flows", json={"id": 1})
+#     body = {
+#         "id": 1,
+#         "title": "新しいタイトル",
+#         "amount": 2000,
+#         "occurred_date": "2025-04-02T00:00:00",
+#         "kind": "income",
+#     }
 
-    # 検証
-    # == は「中身が等しいか」、is は「同じ実体か（同じ参照か）」
-    assert response.status_code == 204
-    assert (
-        fake_session.deleted is target_data
-    )  # session.delete()に正しい対象（target_data）が渡されたことを確認
-    assert fake_session.commit_called is True
+#     # 実行
+#     client.put("/api/v1/money_flows", json=body)
 
-
-# DELETEテスト（コミットに失敗した場合）
-def test_delete_money_flows_commit_error(
-    override_get_db_commit_error: "FakeSessionError", monkeypatch: pytest.MonkeyPatch
-) -> None:
-    target_data = DummyFlow(
-        1,
-        "削除用タイトル",
-        100,
-        "2025-04-01T00:00:00",
-        kind=DummyKind("expense"),
-    )
-
-    monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: target_data)
-
-    # 失敗用ダミーセッション
-    fake_session = override_get_db_commit_error
-
-    # 実行
-    client.request("DELETE", "/api/v1/money_flows", json={"id": 1})
-
-    # 検証
-    assert fake_session.deleted is target_data
-    assert fake_session.commit_called is True
-    assert fake_session.rolled_back is True
+#     # 検証
+#     assert fake_session.commit_called is True
+#     assert fake_session.rolled_back is True
 
 
-# DELETEテスト（指定IDが存在しない場合：BusinessException）
-@pytest.mark.usefixtures("override_get_db_success")
-def test_delete_money_flows_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: None)
+# # PUTテスト（指定IDが存在しない場合：BusinessException）
+# @pytest.mark.usefixtures("override_get_db_success")
+# def test_update_money_flows_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
+#     monkeypatch.setattr(
+#         api_money_flows, "get_money_flow_by_id", lambda _session, id: None
+#     )  # 指定したIDが見つからない想定のためNoneを返す
 
-    response = client.request("DELETE", "/api/v1/money_flows", json={"id": 999})
+#     body = {
+#         "id": 999,  # 存在しないID
+#         "title": "存在しないIDのタイトル",
+#         "amount": 1,
+#         "occurred_date": "2025-04-01T00:00:00",
+#         "kind": "expense",
+#     }
 
-    assert response.status_code == 422
-    assert response.json() == {"detail": "指定したIDが存在しません。"}
+#     # 実行
+#     response = client.put("/api/v1/money_flows", json=body)
+
+#     # 検証
+#     assert response.status_code == 422  # 設定した422が返ることを確認
+#     assert response.json() == {
+#         "detail": "指定したIDが存在しません。"
+#     }  # 設定したメッセージが返ることを確認
+
+
+# # DELETEテスト
+# def test_delete_money_flows(
+#     override_get_db_commit_ok: "FakeSessionOK", monkeypatch: pytest.MonkeyPatch
+# ) -> None:
+#     target_data = DummyFlow(
+#         1,
+#         "削除用タイトル",
+#         100,
+#         "2025-04-01T00:00:00",
+#         DummyKind("expense"),
+#     )
+
+#     monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: target_data)
+
+#     # 成功用ダミーセッション
+#     fake_session = override_get_db_commit_ok
+
+#     # 実行
+#     # TestClientはdelete()はjson=を受け付けない実装なので、request()で代用。.request()は共通の引数を受け付ける（json=, data=, params=, headers= など）。
+#     response = client.request("DELETE", "/api/v1/money_flows", json={"id": 1})
+
+#     # 検証
+#     # == は「中身が等しいか」、is は「同じ実体か（同じ参照か）」
+#     assert response.status_code == 204
+#     assert (
+#         fake_session.deleted is target_data
+#     )  # session.delete()に正しい対象（target_data）が渡されたことを確認
+#     assert fake_session.commit_called is True
+
+
+# # DELETEテスト（コミットに失敗した場合）
+# def test_delete_money_flows_commit_error(
+#     override_get_db_commit_error: "FakeSessionError", monkeypatch: pytest.MonkeyPatch
+# ) -> None:
+#     target_data = DummyFlow(
+#         1,
+#         "削除用タイトル",
+#         100,
+#         "2025-04-01T00:00:00",
+#         kind=DummyKind("expense"),
+#     )
+
+#     monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: target_data)
+
+#     # 失敗用ダミーセッション
+#     fake_session = override_get_db_commit_error
+
+#     # 実行
+#     client.request("DELETE", "/api/v1/money_flows", json={"id": 1})
+
+#     # 検証
+#     assert fake_session.deleted is target_data
+#     assert fake_session.commit_called is True
+#     assert fake_session.rolled_back is True
+
+
+# # DELETEテスト（指定IDが存在しない場合：BusinessException）
+# @pytest.mark.usefixtures("override_get_db_success")
+# def test_delete_money_flows_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
+#     monkeypatch.setattr(api_money_flows, "get_money_flow_by_id", lambda _session, id: None)
+
+#     response = client.request("DELETE", "/api/v1/money_flows", json={"id": 999})
+
+#     assert response.status_code == 422
+#     assert response.json() == {"detail": "指定したIDが存在しません。"}

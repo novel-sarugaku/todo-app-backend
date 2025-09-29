@@ -60,17 +60,20 @@ class FakeSessionOK:  # FakeSession → 本物のDBセッションっぽく振�
 
 
 @pytest.fixture
-def override_get_db_commit_ok() -> Iterator[FakeSessionOK]:
-    fake_session = FakeSessionOK()
+def success_session() -> FakeSessionOK:
+    return FakeSessionOK()
+
+@pytest.fixture
+def override_get_db_commit_ok(success_session: FakeSessionOK) -> Iterator[FakeSessionOK]:
 
     # FakeSessionを返す関数
     # エンドポイント内でsession.add(...)やsession.commit()を実際に呼ぶため、そのメソッドを持つ偽物＝FakeSessionを渡す必要がある
     def _fake_db() -> Iterator[FakeSessionOK]:
-        yield fake_session
+        yield success_session
 
     app.dependency_overrides[get_db] = _fake_db
 
-    yield fake_session
+    yield
 
     app.dependency_overrides.pop(get_db, None)
 
